@@ -1,0 +1,31 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - projectflow-mongo:/data/db
+  server:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://mongo:27017/projectflow
+      JWT_SECRET: ${JWT_SECRET:-local-dev-change-this-secret-before-deploying-123}
+      JWT_EXPIRES_IN: 7d
+      CLIENT_URL: http://localhost:8080
+    depends_on:
+      - mongo
+    ports:
+      - "5000:5000"
+  client:
+    build: ./client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "8080:80"
+volumes:
+  projectflow-mongo:
